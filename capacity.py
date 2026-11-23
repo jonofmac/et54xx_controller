@@ -70,6 +70,7 @@ class TestConfig:
     sync_voltage_gate: bool
     ovp_v: float | None
     ocp_a: float | None
+    program_ranges: bool = True
 
 
 @dataclass(frozen=True)
@@ -491,7 +492,13 @@ class ET54Load:
             channel.Crange = current_range
 
     def setup_mode(self, config: TestConfig) -> None:
-        self.apply_ranges(config.voltage_range, config.current_range)
+        # Changing range makes the load replace its own protection presets.
+        # Leave the range alone when this run is not asking for a new one,
+        # so a start does not overwrite limits the operator has not edited.
+        if config.program_ranges:
+            self.apply_ranges(config.voltage_range, config.current_range)
+        else:
+            self.off()
         with self._io:
             self._program_mode(config)
 
@@ -535,6 +542,20 @@ class ET54Load:
             channel.OVP = ovp_v
             channel.OCP = ocp_a
             return float(channel.OVP), float(channel.OCP)
+
+    def write_over_voltage(self, ovp_v: float) -> float:
+        """Store over-voltage protection and return what the load kept."""
+        with self._io:
+            channel = self.el.ch1
+            channel.OVP = ovp_v
+            return float(channel.OVP)
+
+    def write_over_current(self, ocp_a: float) -> float:
+        """Store over-current protection and return what the load kept."""
+        with self._io:
+            channel = self.el.ch1
+            channel.OCP = ocp_a
+            return float(channel.OCP)
 
     def read_voltage_gate(self) -> tuple[float, float]:
         """Return the load's start voltage and turn-off voltage."""

@@ -1362,6 +1362,9 @@ class CapacityApp(tk.Tk):
             self.resting_v = float(message[1])
             self.readout_values["Voltage"].configure(text=f"{self.resting_v:.3f}")
             self._update_power_hint()
+            # A posted menu grabs input. Flush the redraw so the number paints
+            # while that menu is still open.
+            self.update_idletasks()
         elif kind == "heartbeat_lost":
             if not self.connected:
                 return
@@ -1394,7 +1397,9 @@ class CapacityApp(tk.Tk):
             found = "instrument" if len(names) == 1 else "instruments"
             self._set_status(f"Found {len(names)} {found}.")
             if not self._closing:
-                self._show_resource_menu(names)
+                # Post after this poll schedules the next one. The menu's own
+                # event loop then keeps the voltage heartbeat running.
+                self.after_idle(lambda resources=list(names): self._show_resource_menu(resources))
         elif kind == "resources_failed":
             self._listing_resources = False
             self._sync_buttons()
