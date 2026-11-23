@@ -44,7 +44,7 @@ chmod +x et54xx_app.py
 ./et54xx_app.py
 ```
 
-`et54xx_app.py` is the pack-capacity application. `capacity.py` is the discharge engine it uses. `discharge.py` is the single-cell command-line script. `tests/test_capacity.py` checks the engine without an instrument. Run the app and the cell script with `.venv` active. The checks are:
+`et54xx_app.py` is the pack-capacity application. `capacity.py` is the discharge engine it uses. `tests/test_capacity.py` checks the engine without an instrument. Run the app with `.venv` active. The checks are:
 
 ```bash
 python -m unittest discover -s tests -t .
